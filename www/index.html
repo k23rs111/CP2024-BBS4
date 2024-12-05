@@ -143,14 +143,35 @@ function escapeHtml(str) {
 }
 
 // タイムスタンプのフォーマット
-function formatTimestamp(timestamp) {
-    const date = new Date(timestamp);
-    return date.toLocaleString('ja-JP', {
+function timeAgo(timestamp) {
+    const now = new Date();
+    const postDate = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - postDate) / 1000);
+    const diffInDays = Math.floor(diffInSeconds / 86400);
+
+    // 7日以内なら「〇時間前」形式で表示
+    if (diffInDays < 7) {
+        const intervals = [
+            { label: '日', seconds: 86400 },
+            { label: '時間', seconds: 3600 },
+            { label: '分', seconds: 60 },
+        ];
+
+        for (const interval of intervals) {
+            const count = Math.floor(diffInSeconds / interval.seconds);
+            if (count >= 1) {
+                return `${count}${interval.label}前`;
+            }
+        }
+
+        return 'たった今';
+    }
+
+    // 7日以上前なら日付を表示
+    return postDate.toLocaleDateString('ja-JP', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
     });
 }
 
@@ -197,17 +218,19 @@ function createPostElement(post) {
             </div>
             <div class="post-footer">
                 <span class="post-time">
-                    ${formatTimestamp(post.timestamp)}
+                    ${timeAgo(post.timestamp)}
                 </span>
                 ${post.updatedAt ? `
                     <span class="post-updated">
-                        (編集済み: ${formatTimestamp(post.updatedAt)})
+                        (編集済み: ${timeAgo(post.updatedAt)})
                     </span>
                 ` : ''}
             </div>
         </div>
     `;
 }
+
+
 
 // 投稿の表示処理
 function renderPosts(posts) {

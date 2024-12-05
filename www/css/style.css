@@ -1,7 +1,7 @@
 /* css/style.css */
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #f8f9fa;
+    background-color: #f7f6f5;
     color: #333;
     line-height: 1.6;
 }
@@ -74,7 +74,7 @@ label {
 }
 
 .form-control:focus {
-    border-color: #80bdff;
+    border-color: #80bdffb2;
     outline: 0;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
