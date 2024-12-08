@@ -32,6 +32,7 @@ function showMessage(message, type = 'success') {
         </div>
     `);
     
+    ログイン中
     // 3秒後にメッセージを消す
     setTimeout(() => {
         messageArea.empty();
@@ -81,7 +82,7 @@ function validateContent(content) {
 }
 
 // 認証フォームのバリデーション
-function validateAuthInput(email, password, isRegister = false) {
+function validateAuthInput(email, password, isRegister = false, nickname = '') {
     if (!email || !email.trim()) {
         showMessage('メールアドレスを入力してください', 'error');
         return false;
@@ -94,8 +95,17 @@ function validateAuthInput(email, password, isRegister = false) {
         showMessage('パスワードは6文字以上にしてください', 'error');
         return false;
     }
+    if (isRegister && (!nickname || !nickname.trim())) {
+        showMessage('ニックネームを入力してください', 'error');
+        return false;
+    }
+    if (isRegister && nickname.length > 20) {
+        showMessage('ニックネームは20文字以内にしてください', 'error');
+        return false;
+    }
     return true;
 }
+
 
 // 投稿処理
 function createPost(author, content) {
@@ -430,12 +440,22 @@ function login(email, password) {
 
 // 新規登録処理
 function register(email, password) {
-    if (!validateAuthInput(email, password, true)) return;
+    const nickname = $('#registerNickname').val(); // ニックネームを取得
+    if (!validateAuthInput(email, password, true, nickname)) return;
 
     const button = $('#registerButton');
     button.prop('disabled', true);
 
     firebase.auth().createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+            const user = userCredential.user;
+
+            // ニックネームを含むデータを保存
+            return firebase.database().ref(`users/${user.uid}`).set({
+                email: email,
+                nickname: nickname
+            });
+        })
         .then(() => {
             showMessage('アカウントを作成しました');
             clearAuthForm();
@@ -447,6 +467,7 @@ function register(email, password) {
             button.prop('disabled', false);
         });
 }
+
 
 // ログアウト処理
 function logout() {
@@ -469,15 +490,26 @@ function clearAuthForm() {
 // 　バグ入りなので要修正（emailアドレスを表示するべきところを uid を表示してしまっている）
 function updateUI(user) {
     if (user) {
+        // ニックネームを取得して表示
+        firebase.database().ref(`users/${user.uid}`).once('value')
+            .then((snapshot) => {
+                const userData = snapshot.val();
+                $('#userEmail').text(userData.nickname || user.email); // ニックネームがあれば表示
+            })
+            .catch((error) => {
+                console.error('ニックネーム取得エラー:', error);
+                $('#userEmail').text(user.email); // エラーの場合はメールアドレスを表示
+            });
+
         $('.logged-in').show();
         $('.logged-out').hide();
-        $('#userEmail').text(user.email);
     } else {
         $('.logged-in').hide();
         $('.logged-out').show();
         $('#userEmail').text('');
     }
 }
+
 
 $(function() {
     // Firebaseの初期化
@@ -550,18 +582,25 @@ window.addEventListener('unload', function() {
             <div class="form-group">
                 <label for="loginEmail">メールアドレス</label>
                 <input type="email" id="loginEmail" 
-                       class="form-control" placeholder="example@example.com">
+                       class="form-control" >
+            </div>
+            <div class="form-group">
+                <label for="registerNickname">ニックネーム</label>
+                <input type="text" id="registerNickname" 
+                     class="form-control" >
             </div>
             <div class="form-group">
                 <label for="loginPassword">パスワード</label>
                 <input type="password" id="loginPassword" 
-                       class="form-control" placeholder="6文字以上">
+                       class="form-control" >
                 <small class="help-text">※新規登録時は6文字以上</small>
             </div>
             <div class="button-group">
                 <button id="loginButton" class="btn-primary">ログイン</button>
                 <button id="registerButton" class="btn-secondary">新規登録</button>
             </div>
+            
+
         </div>
 
         <!-- ログイン情報（ログイン時表示） -->
