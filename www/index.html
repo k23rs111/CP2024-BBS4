@@ -32,7 +32,7 @@ function showMessage(message, type = 'success') {
         </div>
     `);
     
-    ログイン中
+    
     // 3秒後にメッセージを消す
     setTimeout(() => {
         messageArea.empty();
@@ -82,7 +82,7 @@ function validateContent(content) {
 }
 
 // 認証フォームのバリデーション
-function validateAuthInput(email, password, isRegister = false, nickname = '') {
+function validateAuthInput(email, password, isRegister = false) {
     if (!email || !email.trim()) {
         showMessage('メールアドレスを入力してください', 'error');
         return false;
@@ -95,17 +95,8 @@ function validateAuthInput(email, password, isRegister = false, nickname = '') {
         showMessage('パスワードは6文字以上にしてください', 'error');
         return false;
     }
-    if (isRegister && (!nickname || !nickname.trim())) {
-        showMessage('ニックネームを入力してください', 'error');
-        return false;
-    }
-    if (isRegister && nickname.length > 20) {
-        showMessage('ニックネームは20文字以内にしてください', 'error');
-        return false;
-    }
     return true;
 }
-
 
 // 投稿処理
 function createPost(author, content) {
@@ -113,8 +104,6 @@ function createPost(author, content) {
         showMessage('投稿するにはログインが必要です', 'error');
         return;
     }
-
-    if (!validateContent(content)) return;
 
     const button = $('#postButton');
     button.prop('disabled', true);
@@ -191,7 +180,6 @@ function canEditPost(post) {
 }
 
 // 投稿のHTML要素を生成
-// 　バグ入りなので要修正（編集・削除機能表示判定が誤っている）
 function createPostElement(post) {
     // 編集権限を確認
     const canEdit = canEditPost(post);
@@ -421,10 +409,8 @@ function animateUpdate(postId) {
 // ログイン処理
 function login(email, password) {
     if (!validateAuthInput(email, password)) return;
-
     const button = $('#loginButton');
     button.prop('disabled', true);
-
     firebase.auth().signInWithEmailAndPassword(email, password)
         .then(() => {
             showMessage('ログインしました');
@@ -440,22 +426,10 @@ function login(email, password) {
 
 // 新規登録処理
 function register(email, password) {
-    const nickname = $('#registerNickname').val(); // ニックネームを取得
-    if (!validateAuthInput(email, password, true, nickname)) return;
-
+    if (!validateAuthInput(email, password, true)) return;
     const button = $('#registerButton');
     button.prop('disabled', true);
-
     firebase.auth().createUserWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-            const user = userCredential.user;
-
-            // ニックネームを含むデータを保存
-            return firebase.database().ref(`users/${user.uid}`).set({
-                email: email,
-                nickname: nickname
-            });
-        })
         .then(() => {
             showMessage('アカウントを作成しました');
             clearAuthForm();
@@ -484,31 +458,22 @@ function logout() {
 function clearAuthForm() {
     $('#loginEmail').val('');
     $('#loginPassword').val('');
+    $('#authorInput').val('');
 }
 
 // UI更新
-// 　バグ入りなので要修正（emailアドレスを表示するべきところを uid を表示してしまっている）
 function updateUI(user) {
     if (user) {
-        // ニックネームを取得して表示
-        firebase.database().ref(`users/${user.uid}`).once('value')
-            .then((snapshot) => {
-                const userData = snapshot.val();
-                $('#userEmail').text(userData.nickname || user.email); // ニックネームがあれば表示
-            })
-            .catch((error) => {
-                console.error('ニックネーム取得エラー:', error);
-                $('#userEmail').text(user.email); // エラーの場合はメールアドレスを表示
-            });
-
         $('.logged-in').show();
         $('.logged-out').hide();
+        $('#userEmail').text(user.email);
     } else {
         $('.logged-in').hide();
         $('.logged-out').show();
         $('#userEmail').text('');
     }
 }
+
 
 
 $(function() {
@@ -582,27 +547,23 @@ window.addEventListener('unload', function() {
             <div class="form-group">
                 <label for="loginEmail">メールアドレス</label>
                 <input type="email" id="loginEmail" 
-                       class="form-control" >
+                       class="form-control">
             </div>
             <div class="form-group">
-                <label for="registerNickname">ニックネーム</label>
-                <input type="text" id="registerNickname" 
-                     class="form-control" >
-            </div>
-            <div class="form-group">
+                <label for="authorInput">ニックネーム</label>
+                <input type="text" id="authorInput" 
+                       class="form-control">
+                <small class="character-count" id="authorCount">0/20</small>
                 <label for="loginPassword">パスワード</label>
                 <input type="password" id="loginPassword" 
-                       class="form-control" >
+                       class="form-control" placeholder="6文字以上">
                 <small class="help-text">※新規登録時は6文字以上</small>
             </div>
             <div class="button-group">
                 <button id="loginButton" class="btn-primary">ログイン</button>
                 <button id="registerButton" class="btn-secondary">新規登録</button>
             </div>
-            
-
         </div>
-
         <!-- ログイン情報（ログイン時表示） -->
         <div class="user-info logged-in">
             <span>ログイン中：<span id="userEmail"></span></span>
