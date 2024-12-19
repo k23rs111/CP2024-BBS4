@@ -82,7 +82,7 @@ function validateContent(content) {
 }
 
 // 認証フォームのバリデーション
-function validateAuthInput(email, password, isRegister = false) {
+function validateAuthInput(email, password, text, isRegister = false) {
     if (!email || !email.trim()) {
         showMessage('メールアドレスを入力してください', 'error');
         return false;
@@ -93,6 +93,11 @@ function validateAuthInput(email, password, isRegister = false) {
     }
     if (isRegister && password.length < 6) {
         showMessage('パスワードは6文字以上にしてください', 'error');
+        return false;
+    }
+
+    if(!text || !text.trim()) {
+        showMessage('ニックネームを入力してください', 'error');
         return false;
     }
     return true;
@@ -282,6 +287,7 @@ function loadPosts() {
     });
 }
 
+
 // モーダル関連の関数
 function showModal(modalId) {
     $(`#${modalId}`).fadeIn(200);
@@ -407,8 +413,8 @@ function animateUpdate(postId) {
 }
 
 // ログイン処理
-function login(email, password) {
-    if (!validateAuthInput(email, password)) return;
+function login(email, password, text) {
+    if (!validateAuthInput(email, password, text)) return;
     const button = $('#loginButton');
     button.prop('disabled', true);
     firebase.auth().signInWithEmailAndPassword(email, password)
@@ -425,11 +431,11 @@ function login(email, password) {
 }
 
 // 新規登録処理
-function register(email, password) {
-    if (!validateAuthInput(email, password, true)) return;
+function register(email, password, text) {
+    if (!validateAuthInput(email, password, text, true)) return;
     const button = $('#registerButton');
     button.prop('disabled', true);
-    firebase.auth().createUserWithEmailAndPassword(email, password)
+    firebase.auth().createUserWithEmailAndPassword(email, password, text)
         .then(() => {
             showMessage('アカウントを作成しました');
             clearAuthForm();
@@ -508,13 +514,15 @@ $(function() {
     $('#loginButton').on('click', function() {
         const email = $('#loginEmail').val();
         const password = $('#loginPassword').val();
-        login(email, password);
+        const text = $('#authorInput').val()
+        login(email, password, text);
     });
 
     $('#registerButton').on('click', function() {
         const email = $('#loginEmail').val();
         const password = $('#loginPassword').val();
-        register(email, password);
+        const text = $('#authorInput').val()
+        register(email, password, text);
     });
 
     $('#logoutButton').on('click', logout);
@@ -553,6 +561,7 @@ window.addEventListener('unload', function() {
                 <label for="authorInput">ニックネーム</label>
                 <input type="text" id="authorInput" 
                        class="form-control">
+            </div>
                 <small class="character-count" id="authorCount">0/20</small>
                 <label for="loginPassword">パスワード</label>
                 <input type="password" id="loginPassword" 
