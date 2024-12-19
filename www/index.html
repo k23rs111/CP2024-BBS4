@@ -418,8 +418,10 @@ function login(email, password, text) {
     const button = $('#loginButton');
     button.prop('disabled', true);
     firebase.auth().signInWithEmailAndPassword(email, password)
-        .then(() => {
+        .then((userCredential) => {
+            const user = userCredential.user;
             showMessage('ログインしました');
+            updateUI(user);
             clearAuthForm();
         })
         .catch((error) => {
@@ -435,7 +437,13 @@ function register(email, password, text) {
     if (!validateAuthInput(email, password, text, true)) return;
     const button = $('#registerButton');
     button.prop('disabled', true);
-    firebase.auth().createUserWithEmailAndPassword(email, password, text)
+    firebase.auth().createUserWithEmailAndPassword(email, password)
+    .then((userCredentilal) => {
+            const user =  userCredentilal.user;
+            return user.updateProfile({
+                displayName: text,
+            });
+        })
         .then(() => {
             showMessage('アカウントを作成しました');
             clearAuthForm();
@@ -472,14 +480,14 @@ function updateUI(user) {
     if (user) {
         $('.logged-in').show();
         $('.logged-out').hide();
-        $('#userEmail').text(user.email);
+        $('#userEmail').text(user.displayName || user.email);
+
     } else {
         $('.logged-in').hide();
         $('.logged-out').show();
         $('#userEmail').text('');
     }
 }
-
 
 
 $(function() {
