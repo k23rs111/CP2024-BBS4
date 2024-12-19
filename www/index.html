@@ -480,7 +480,7 @@ function updateUI(user) {
     if (user) {
         $('.logged-in').show();
         $('.logged-out').hide();
-        $('#userEmail').text(user.displayName || user.email);
+        $('#userEmail').text(user.displayName);
 
     } else {
         $('.logged-in').hide();
@@ -569,7 +569,7 @@ window.addEventListener('unload', function() {
                 <label for="authorInput">ニックネーム</label>
                 <input type="text" id="authorInput" 
                        class="form-control">
-            </div>
+
                 <small class="character-count" id="authorCount">0/20</small>
                 <label for="loginPassword">パスワード</label>
                 <input type="password" id="loginPassword" 
@@ -581,6 +581,8 @@ window.addEventListener('unload', function() {
                 <button id="registerButton" class="btn-secondary">新規登録</button>
             </div>
         </div>
+
+        
         <!-- ログイン情報（ログイン時表示） -->
         <div class="user-info logged-in">
             <span>ログイン中：<span id="userEmail"></span></span>
