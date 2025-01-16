@@ -153,7 +153,7 @@ function timeAgo(timestamp) {
     const diffInSeconds = Math.floor((now - postDate) / 1000);
     const diffInDays = Math.floor(diffInSeconds / 86400);
 
-    // 7日以内なら「〇時間前」形式で表示
+    // 7日以内なら「〇前」形式で表示
     if (diffInDays < 7) {
         const intervals = [
             { label: '日', seconds: 86400 },
@@ -171,7 +171,7 @@ function timeAgo(timestamp) {
         return 'たった今';
     }
 
-    // 7日以上前なら日付を表示
+    // 7日以上後なら日付を表示
     return postDate.toLocaleDateString('ja-JP', {
         year: 'numeric',
         month: '2-digit',
@@ -569,11 +569,10 @@ window.addEventListener('unload', function() {
                 <label for="authorInput">ニックネーム</label>
                 <input type="text" id="authorInput" 
                        class="form-control">
-
                 <small class="character-count" id="authorCount">0/20</small>
                 <label for="loginPassword">パスワード</label>
                 <input type="password" id="loginPassword" 
-                       class="form-control" placeholder="6文字以上">
+                       class="form-control">
                 <small class="help-text">※新規登録時は6文字以上</small>
             </div>
             <div class="button-group">
